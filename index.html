@@ -41,6 +41,14 @@
         .controls button:hover {
             background-color: #218838;
         }
+        .time-display {
+            font-size: 18px;
+            font-weight: bold;
+            color: #444;
+            margin: 15px 0;
+            display: flex;
+            justify-content: space-around;
+        }
         .volume-control {
             margin-top: 20px;
             display: flex;
@@ -69,6 +77,11 @@
             Your browser does not support the audio element.
         </audio>
 
+        <div class="time-display">
+            <span id="currentTimeText">0:00</span>
+            <span id="timeLeftText">-0:00</span>
+        </div>
+
         <div class="controls">
             <button onclick="playAudio()" id="playBtn">Play</button>
         </div>
@@ -86,6 +99,16 @@
         const volumeSlider = document.getElementById("volumeSlider");
         const statusMessage = document.getElementById("statusMessage");
         const playBtn = document.getElementById("playBtn");
+        const currentTimeText = document.getElementById("currentTimeText");
+        const timeLeftText = document.getElementById("timeLeftText");
+
+        // Helper function to format seconds into M:SS
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return "0:00";
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return m + ":" + (s < 10 ? "0" + s : s);
+        }
 
         // 1. Check for saved progress when the page loads
         window.addEventListener('load', () => {
@@ -96,19 +119,38 @@
             }
         });
 
-        // 2. Save progress to your browser's local storage as it plays
-        audio.addEventListener('timeupdate', () => {
-            localStorage.setItem('audio1_progress', audio.currentTime);
+        // 2. Wait for audio metadata to load so we know the total duration
+        audio.addEventListener('loadedmetadata', () => {
+            // Update the display immediately upon load (in case they resume halfway)
+            updateTimeDisplay();
         });
 
-        // 3. Clear the saved progress once the audio finishes completely
+        // 3. Update the time displays and save progress as it plays
+        audio.addEventListener('timeupdate', () => {
+            localStorage.setItem('audio1_progress', audio.currentTime);
+            updateTimeDisplay();
+        });
+
+        // Function to handle the visual time updates
+        function updateTimeDisplay() {
+            // Current Time
+            currentTimeText.innerText = formatTime(audio.currentTime);
+            // Time Left (Total Duration minus Current Time)
+            const timeLeft = audio.duration - audio.currentTime;
+            timeLeftText.innerText = "-" + formatTime(timeLeft);
+        }
+
+        // 4. Clear the saved progress once the audio finishes completely
         audio.addEventListener('ended', () => {
             localStorage.removeItem('audio1_progress');
             statusMessage.innerText = "Audio finished.";
             playBtn.innerText = "Play Again";
+            playBtn.disabled = false; // Re-enable so they can play again
+            playBtn.style.backgroundColor = "#28a745"; // Revert to green
+            playBtn.style.cursor = "pointer";
         });
 
-        // 4. Play function
+        // 5. Play function
         function playAudio() {
             audio.play();
             statusMessage.innerText = "Playing...";
@@ -118,7 +160,7 @@
             playBtn.style.cursor = "default";
         }
 
-        // 5. Volume adjustment function
+        // 6. Volume adjustment function
         function adjustVolume() {
             audio.volume = volumeSlider.value;
         }
