@@ -14,8 +14,6 @@
             background-color: #f0f2f5;
             margin: 0;
         }
-        
-        /* Player Styles */
         .player-container {
             background: white;
             padding: 25px;
@@ -24,8 +22,10 @@
             text-align: center;
             width: 320px;
         }
-        h2 { margin-top: 0; color: #333; }
-        
+        h2 {
+            margin-top: 0;
+            color: #333;
+        }
         button {
             padding: 12px 24px;
             font-size: 16px;
@@ -37,17 +37,20 @@
             border-radius: 8px;
             margin-bottom: 20px;
             width: 100%;
-            transition: background 0.2s, opacity 0.2s;
+            transition: background 0.2s;
         }
-        button:hover:not(:disabled) { background: #0056b3; }
+        button:hover:not(:disabled) {
+            background: #0056b3;
+        }
         button:disabled {
             background: #6c757d;
             cursor: not-allowed;
-            opacity: 0.8;
         }
-
-        .controls { display: flex; flex-direction: column; gap: 15px; }
-        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
         .time-display {
             display: flex;
             justify-content: space-between;
@@ -58,7 +61,6 @@
             padding: 10px;
             border-radius: 6px;
         }
-        
         .volume-control {
             display: flex;
             align-items: center;
@@ -67,12 +69,19 @@
             color: #444;
             font-weight: 500;
         }
-        input[type="range"] { flex-grow: 1; margin-left: 15px; cursor: pointer; }
+        input[type="range"] {
+            flex-grow: 1;
+            margin-left: 15px;
+            cursor: pointer;
+        }
 
-        /* Modal / Popup Styles */
+        /* Modal Overlay Styles */
         .modal-overlay {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: rgba(0, 0, 0, 0.6);
             display: flex;
             justify-content: center;
@@ -83,16 +92,26 @@
             background: white;
             padding: 30px;
             border-radius: 12px;
-            width: 90%;
             max-width: 400px;
+            width: 90%;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
-        .modal-content h3 { margin-top: 0; color: #d9534f; }
-        .modal-content ol { margin-bottom: 25px; color: #333; line-height: 1.5; padding-left: 20px;}
-        .modal-content li { margin-bottom: 10px; }
-        
-        /* Hidden class to easily hide the modal */
-        .hidden { display: none !important; }
+        .modal-content h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .modal-content ol {
+            margin-bottom: 25px;
+            color: #444;
+            line-height: 1.6;
+            padding-left: 20px;
+        }
+        .modal-content button {
+            margin-bottom: 0;
+        }
+        .hidden {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -101,10 +120,10 @@
     <div class="modal-content">
         <h3>Instructions:</h3>
         <ol>
-            <li>You <strong>WILL NOT</strong> be able to pause the audio.</li>
+            <li>You WILL NOT be able to pause the audio.</li>
             <li>Click play when you're ready to start.</li>
         </ol>
-        <button id="closeModalBtn" style="background: #28a745; margin-bottom: 0;">I Understand</button>
+        <button id="closeModalBtn">I Understand</button>
     </div>
 </div>
 
@@ -114,7 +133,7 @@
     <audio id="audioPlayer" src="audio2.mp3" preload="metadata"></audio>
 
     <div class="controls">
-        <button id="playBtn">Play Audio</button>
+        <button id="playBtn">Play</button>
         
         <div class="time-display">
             <span id="currentTime">0:00</span>
@@ -135,6 +154,7 @@
     const remainingTimeEl = document.getElementById('remainingTime');
     const volumeSlider = document.getElementById('volumeSlider');
     
+    // Modal Elements
     const instructionModal = document.getElementById('instructionModal');
     const closeModalBtn = document.getElementById('closeModalBtn');
 
@@ -177,38 +197,35 @@
         remainingTimeEl.textContent = "-" + formatTime(audio.duration - audio.currentTime);
     });
 
-    // Play Logic (Enforcing No-Pause)
+    // Play Only Logic (Pause removed)
     playBtn.addEventListener('click', () => {
-        audio.play();
-        playBtn.textContent = 'Playing...';
-        playBtn.disabled = true; // Disables button so it can't be clicked to pause
-    });
-
-    // Anti-Pause safety mechanism (prevent media key pausing)
-    audio.addEventListener('pause', () => {
-        if (!audio.ended) { // If it didn't finish naturally, force it to keep playing
+        if (audio.paused) {
             audio.play();
+            playBtn.textContent = 'Playing...';
+            playBtn.disabled = true; // Locks the button so they cannot pause
         }
     });
 
-    // Update Times & Save Progress
+    // Time Update & Save Progress
     audio.addEventListener('timeupdate', () => {
         currentTimeEl.textContent = formatTime(audio.currentTime);
+        
         if (!isNaN(audio.duration)) {
             remainingTimeEl.textContent = "-" + formatTime(audio.duration - audio.currentTime);
         }
+        
         localStorage.setItem('audio2_progress', audio.currentTime);
     });
 
-    // Volume Logic
+    // Volume Update
     volumeSlider.addEventListener('input', (e) => {
         audio.volume = e.target.value;
         localStorage.setItem('audio2_volume', audio.volume);
     });
 
-    // Reset when audio finishes
+    // Reset when finished
     audio.addEventListener('ended', () => {
-        playBtn.textContent = 'Play Audio';
+        playBtn.textContent = 'Play';
         playBtn.disabled = false; // Re-enable for replay
         localStorage.removeItem('audio2_progress');
         currentTimeEl.textContent = "0:00";
