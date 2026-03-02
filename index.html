@@ -130,7 +130,7 @@
 <div class="player-container">
     <h2>Now Playing</h2>
     
-    <audio id="audioPlayer" src="audio2.mp3" preload="metadata"></audio>
+    <audio id="audioPlayer" src="audio1.mp3" preload="metadata"></audio>
 
     <div class="controls">
         <button id="playBtn">Play</button>
@@ -148,7 +148,7 @@
 </div>
 
 <script>
-  const audio = document.getElementById('audioPlayer');
+    const audio = document.getElementById('audioPlayer');
     const playBtn = document.getElementById('playBtn');
     const currentTimeEl = document.getElementById('currentTime');
     const remainingTimeEl = document.getElementById('remainingTime');
@@ -165,7 +165,7 @@
 
     // Time Formatter
     function formatTime(seconds) {
-        if (isNaN(seconds) || !isFinite(seconds) || seconds < 0) return "0:00";
+        if (isNaN(seconds) || seconds < 0) return "0:00";
         const hrs = Math.floor(seconds / 3600);
         const min = Math.floor((seconds % 3600) / 60);
         const sec = Math.floor(seconds % 60);
@@ -180,12 +180,12 @@
 
     // Load LocalStorage Data
     window.addEventListener('load', () => {
-        const savedTime = localStorage.getItem('audio2_progress');
+        const savedTime = localStorage.getItem('audio1_progress');
         if (savedTime !== null) {
             audio.currentTime = parseFloat(savedTime);
         }
         
-        const savedVolume = localStorage.getItem('audio2_volume');
+        const savedVolume = localStorage.getItem('audio1_volume');
         if (savedVolume !== null) {
             audio.volume = parseFloat(savedVolume);
             volumeSlider.value = savedVolume;
@@ -197,29 +197,12 @@
         remainingTimeEl.textContent = "-" + formatTime(audio.duration - audio.currentTime);
     });
 
-    // Play Only Logic with Error Handling
+    // Play Only Logic (Pause removed)
     playBtn.addEventListener('click', () => {
         if (audio.paused) {
-            // Safety check: if progress is stuck at the end, restart it
-            if (audio.currentTime >= audio.duration) {
-                audio.currentTime = 0;
-            }
-
-            const playPromise = audio.play();
-
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    // Playback started successfully
-                    playBtn.textContent = 'Playing...';
-                    playBtn.disabled = true; 
-                }).catch(error => {
-                    // Playback failed
-                    console.error("Playback failed:", error);
-                    alert("Cannot play audio. Please verify 'audio2.mp3' is in the exact same folder as this file.");
-                    playBtn.textContent = 'Play';
-                    playBtn.disabled = false;
-                });
-            }
+            audio.play();
+            playBtn.textContent = 'Playing...';
+            playBtn.disabled = true; // Locks the button so they cannot pause
         }
     });
 
@@ -227,25 +210,24 @@
     audio.addEventListener('timeupdate', () => {
         currentTimeEl.textContent = formatTime(audio.currentTime);
         
-        if (!isNaN(audio.duration) && isFinite(audio.duration)) {
+        if (!isNaN(audio.duration)) {
             remainingTimeEl.textContent = "-" + formatTime(audio.duration - audio.currentTime);
         }
         
-        localStorage.setItem('audio2_progress', audio.currentTime);
+        localStorage.setItem('audio1_progress', audio.currentTime);
     });
 
     // Volume Update
     volumeSlider.addEventListener('input', (e) => {
         audio.volume = e.target.value;
-        localStorage.setItem('audio2_volume', audio.volume);
+        localStorage.setItem('audio1_volume', audio.volume);
     });
 
     // Reset when finished
     audio.addEventListener('ended', () => {
         playBtn.textContent = 'Play';
-        playBtn.disabled = false; 
-        localStorage.removeItem('audio2_progress');
-        audio.currentTime = 0;
+        playBtn.disabled = false; // Re-enable for replay
+        localStorage.removeItem('audio1_progress');
         currentTimeEl.textContent = "0:00";
         remainingTimeEl.textContent = "-" + formatTime(audio.duration);
     });
